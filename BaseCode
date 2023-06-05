@@ -1,0 +1,89 @@
+use strict;
+use warnings;
+use Term::ReadKey;
+
+my $width = 20;
+my $height = 10;
+my $player_x = int($width / 2);
+my $player_y = int($height / 2);
+my $score = 0;
+
+my @walls = (
+    [3, 5],
+    [4, 5],
+    [5, 5],
+    [6, 5],
+    [7, 5],
+    [8, 5],
+    [9, 5],
+    [10, 5],
+    [11, 5]
+);
+
+sub draw_game {
+    system("clear");
+    for (my $y = 0; $y < $height; $y++) {
+        for (my $x = 0; $x < $width; $x++) {
+            if ($x == $player_x && $y == $player_y) {
+                print "P";
+            } elsif (grep { $_->[0] == $x && $_->[1] == $y } @walls) {
+                print "#";
+            } else {
+                print ".";
+            }
+        }
+        print "\n";
+    }
+    print "Score: $score\n";
+}
+
+sub handle_input {
+    ReadMode('cbreak');
+    my $key = ReadKey(0);
+    ReadMode('normal');
+    if ($key eq "q") {
+        exit;
+    } elsif ($key eq "w" && $player_y > 0 && !collides_with_wall($player_x, $player_y - 1)) {
+        $player_y--;
+    } elsif ($key eq "s" && $player_y < $height - 1 && !collides_with_wall($player_x, $player_y + 1)) {
+        $player_y++;
+    } elsif ($key eq "a" && $player_x > 0 && !collides_with_wall($player_x - 1, $player_y)) {
+        $player_x--;
+    } elsif ($key eq "d" && $player_x < $width - 1 && !collides_with_wall($player_x + 1, $player_y)) {
+        $player_x++;
+    }
+}
+
+sub collides_with_wall {
+    my ($x, $y) = @_;
+    foreach my $wall (@walls) {
+        if ($wall->[0] == $x && $wall->[1] == $y) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+sub check_collision {
+    if (collides_with_wall($player_x, $player_y)) {
+        print "Game Over! Your final score is $score.\n";
+        exit;
+    }
+}
+
+sub update_score {
+    if ($player_x == 0 && $player_y == 0) {
+        $score++;
+    }
+}
+
+sub game_loop {
+    while (1) {
+        draw_game();
+        handle_input();
+        check_collision();
+        update_score();
+    }
+}
+
+game_loop();
